@@ -28,7 +28,8 @@ A_exp A_IdExp(string id) {
 
 A_exp A_NumExp(int num) {
   A_exp e = checked_malloc(sizeof *e);
-  e->kind=A_numExp; e->u.num=num;
+  e->kind=A_numExp;
+  e->u.num=num;
   return e;
 }
 
@@ -50,11 +51,39 @@ A_expList A_PairExpList(A_exp head, A_expList tail) {
   return e;
 }
 
-A_expList A_LastExpList(A_exp last) {
+A_expList A_LastExpList(A_exp last)
+{
   A_expList e = checked_malloc(sizeof *e);
-  e->kind=A_lastExpList; e->u.last=last;
+  e->kind = A_lastExpList;
+  e->u.last = last;
   return e;
 }
 
+static int length_print(A_expList exps){
+  int len=1;
+  if(exps){
+    while(exps->kind!=A_lastExpList){
+      exps = exps->u.pair.tail;
+      len++;
+    }
+    return len;
+  }
+  return 0;
 
+}
 
+int maxargs(A_stm stm)
+{
+  A_stm p;
+  p = stm;
+  if (p->kind == A_printStm) {
+    return length_print(p->u.print.exps);
+  } else if (p->kind == A_assignStm) {
+    if (p->u.assign.exp->kind == A_eseqExp) {
+      return maxargs(p->u.assign.exp->u.eseq.stm);
+    }
+  } else {
+    return max(maxargs(p->u.compound.stm1),maxargs(p->u.compound.stm2));
+  }
+  return 0;
+}
